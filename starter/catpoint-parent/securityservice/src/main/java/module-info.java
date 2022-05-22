@@ -4,7 +4,9 @@ module com.udacity.catpoint.securityservice {
     requires com.google.common;
     requires gson;
     requires java.desktop;
+    requires java.sql;
 
-    exports com.udacity.catpoint.security.data;
     exports com.udacity.catpoint.security.service;
+    exports com.udacity.catpoint.security.data;
+    opens com.udacity.catpoint.security.data to gson;
 }
