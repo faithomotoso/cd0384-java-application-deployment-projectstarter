@@ -35,7 +35,7 @@ public class SecurityServiceTest {
     }
 
     /**
-     * If alarm is armed and a sensor becomes activated, put the system into pending alarm status.
+     * 1. If alarm is armed and a sensor becomes activated, put the system into pending alarm status.
      */
     @ParameterizedTest
     @DisplayName("If alarm is armed and sensor becomes activated, put system into pending alarm status")
@@ -61,5 +61,23 @@ public class SecurityServiceTest {
         );
 
         return sensors.stream().map(Arguments::of);
+    }
+
+    /**
+     * 2. If alarm is armed and a sensor becomes activated and the system is already pending alarm,
+     *    set the alarm status to alarm.
+     */
+    @ParameterizedTest
+    @MethodSource(value = "activeSensorStream")
+    public void testAlarmStatus_whenAlarmIsArmed_withSystemInPendingAlarm_andSensorBecomesActivated(Sensor sensor) {
+        // Mock security repository and set arming status
+        when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
+
+        // Mock alarm status to pending alarm
+        when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.PENDING_ALARM);
+
+        securityService.changeSensorActivationStatus(sensor, true);
+
+        verify(securityRepository).setAlarmStatus(AlarmStatus.ALARM);
     }
 }
