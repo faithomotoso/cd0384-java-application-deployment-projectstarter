@@ -80,4 +80,23 @@ public class SecurityServiceTest {
 
         verify(securityRepository).setAlarmStatus(AlarmStatus.ALARM);
     }
+
+    /**
+     * 3. If pending alarm and all sensors are inactive, return to no alarm state.
+     */
+    @ParameterizedTest
+    @MethodSource(value = "activeSensorStream")
+    public void testAlarmStatus_whenSystemInPendingAlarm_andSensorBecomesInactive(Sensor sensor) {
+        // Set sensor to active
+        sensor.setActive(true);
+
+        // Mock alarm status to PendingAlarm
+        when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.PENDING_ALARM);
+
+        // Deactivate sensor
+        securityService.changeSensorActivationStatus(sensor, false);
+
+        // Verify system change
+        verify(securityRepository).setAlarmStatus(AlarmStatus.NO_ALARM);
+    }
 }
