@@ -118,6 +118,25 @@ public class SecurityServiceTest {
         securityService.changeSensorActivationStatus(sensor, random.nextBoolean());
 
         // Assert system alarm status is still set to Alarm
-        assertEquals(securityService.getAlarmStatus(), AlarmStatus.ALARM);
+        assertEquals(AlarmStatus.ALARM, securityService.getAlarmStatus());
+    }
+
+    /**
+     * 5. If a sensor is activated while already active and the system is in pending state, change it to alarm state.
+     */
+    @ParameterizedTest
+    @MethodSource(value = "activeSensorStream")
+    public void testAlarmState_whenSensorIsActive_andSensorGetsActivated_andSystemIsInPendingState(Sensor sensor) {
+        // Set sensor to active
+        sensor.setActive(true);
+
+        // Mock pending state
+        when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.PENDING_ALARM);
+
+        // Change sensor status through service
+        securityService.changeSensorActivationStatus(sensor, true);
+
+        // Assert alarm status was updated in securityRepository
+        verify(securityRepository).setAlarmStatus(AlarmStatus.ALARM);
     }
 }
