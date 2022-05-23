@@ -3,6 +3,7 @@ package com.udacity.catpoint.security.service;
 import com.udacity.catpoint.image.service.ImageService;
 import com.udacity.catpoint.security.data.AlarmStatus;
 import com.udacity.catpoint.security.data.*;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,8 +15,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -98,5 +102,22 @@ public class SecurityServiceTest {
 
         // Verify system change
         verify(securityRepository).setAlarmStatus(AlarmStatus.NO_ALARM);
+    }
+
+    /**
+     * 4. If alarm is active, change in sensor state should not affect the alarm state.
+     */
+    @ParameterizedTest
+    @MethodSource(value = "activeSensorStream")
+    public void testAlarmState_whenAlarmIsActive_andSensorStateChanges(Sensor sensor) {
+        // Mock alarm status to be active
+        when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.ALARM);
+
+        // Change alarm status to either true or false
+        Random random = new Random();
+        securityService.changeSensorActivationStatus(sensor, random.nextBoolean());
+
+        // Assert system alarm status is still set to Alarm
+        assertEquals(securityService.getAlarmStatus(), AlarmStatus.ALARM);
     }
 }
