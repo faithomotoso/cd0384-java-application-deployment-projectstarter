@@ -3,10 +3,7 @@ package com.udacity.catpoint.security.service;
 import com.udacity.catpoint.image.service.ImageService;
 import com.udacity.catpoint.security.data.AlarmStatus;
 import com.udacity.catpoint.security.data.*;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -14,6 +11,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Stream;
@@ -26,6 +24,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class SecurityServiceTest {
     private SecurityService securityService;
+
+    @Mock
     private ImageService imageService;
 
 
@@ -154,5 +154,22 @@ public class SecurityServiceTest {
         securityService.changeSensorActivationStatus(sensor, false);
 
         verify(securityRepository, never()).setAlarmStatus(any(AlarmStatus.class));
+    }
+
+    /**
+     * 7. If the image service identifies an image containing a cat while the system is armed-home, put the system into alarm status.
+     */
+    @Test
+    public void testAlarmStatus_isSetToAlarm_whenImageServiceDetectsCat_andArmingStatusIsArmedHome() {
+        when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
+
+        // Mock imageService to always detect a cat
+        when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(true);
+
+        // Call processImage in securityService
+        securityService.processImage(null);
+
+        // Verify system's AlarmStatus is updated to Alarm
+        verify(securityRepository, times(1)).setAlarmStatus(AlarmStatus.ALARM);
     }
 }
