@@ -21,8 +21,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class SecurityServiceTest {
@@ -138,5 +137,22 @@ public class SecurityServiceTest {
 
         // Assert alarm status was updated in securityRepository
         verify(securityRepository).setAlarmStatus(AlarmStatus.ALARM);
+    }
+
+    /**
+     * 6. If a sensor is deactivated while already inactive, make no changes to the alarm state.
+     */
+    @ParameterizedTest
+    @MethodSource(value = "activeSensorStream")
+    public void testAlarmState_remainsUnchanged_whenADeactivatedSensor_getsDeactivated(Sensor sensor) {
+
+        AlarmStatus alarmStatus = new Random().nextBoolean() ? AlarmStatus.PENDING_ALARM : AlarmStatus.ALARM;
+
+//        when(securityRepository.getAlarmStatus()).thenReturn(alarmStatus);
+
+        // Deactivate sensor in securityService
+        securityService.changeSensorActivationStatus(sensor, false);
+
+        verify(securityRepository, never()).setAlarmStatus(any(AlarmStatus.class));
     }
 }
