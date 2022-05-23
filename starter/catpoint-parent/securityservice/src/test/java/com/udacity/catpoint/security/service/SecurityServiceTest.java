@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,10 +47,10 @@ public class SecurityServiceTest {
         // Set mock in repository for getAlarmStatus
         when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.NO_ALARM);
 
-        // Set mock in repository for setAlarmStatus
-        when(securityRepository.setAlarmStatus(any(AlarmStatus.class))).thenReturn();
-
         securityService.changeSensorActivationStatus(sensor, true);
+
+        // Verify that system was updated through the repository
+        verify(securityRepository).setAlarmStatus(AlarmStatus.PENDING_ALARM);
     }
 
     private static Stream<Arguments> activeSensorStream() {
