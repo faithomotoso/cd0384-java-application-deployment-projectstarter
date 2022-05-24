@@ -21,6 +21,11 @@ public class Sensor implements Comparable<Sensor> {
         this.active = Boolean.FALSE;
     }
 
+    public Sensor(String name, SensorType sensorType, Boolean activeStatus) {
+        this(name, sensorType);
+        this.active = activeStatus;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

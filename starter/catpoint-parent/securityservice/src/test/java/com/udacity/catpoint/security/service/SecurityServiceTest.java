@@ -11,9 +11,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.awt.image.BufferedImage;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -58,7 +59,7 @@ public class SecurityServiceTest {
 
     private static Stream<Arguments> activeSensorStream() {
         List<Sensor> sensors = List.of(
-                new Sensor("Fire Sensor", SensorType.DOOR),
+                new Sensor("Fire Sensor", SensorType.DOOR, true),
                 new Sensor("Water Sensor", SensorType.MOTION),
                 new Sensor("Light Sensor", SensorType.WINDOW)
         );
@@ -68,7 +69,7 @@ public class SecurityServiceTest {
 
     /**
      * 2. If alarm is armed and a sensor becomes activated and the system is already pending alarm,
-     *    set the alarm status to alarm.
+     * set the alarm status to alarm.
      */
     @ParameterizedTest
     @MethodSource(value = "activeSensorStream")
@@ -148,7 +149,8 @@ public class SecurityServiceTest {
 
         AlarmStatus alarmStatus = new Random().nextBoolean() ? AlarmStatus.PENDING_ALARM : AlarmStatus.ALARM;
 
-//        when(securityRepository.getAlarmStatus()).thenReturn(alarmStatus);
+        // Set sensor to be deactivated
+        sensor.setActive(false);
 
         // Deactivate sensor in securityService
         securityService.changeSensorActivationStatus(sensor, false);
@@ -171,5 +173,54 @@ public class SecurityServiceTest {
 
         // Verify system's AlarmStatus is updated to Alarm
         verify(securityRepository, times(1)).setAlarmStatus(AlarmStatus.ALARM);
+    }
+
+    private List<Sensor> getSensors() {
+        return activeSensorStream().map(a -> (Sensor) a.get()[0]).collect(Collectors.toList());
+    }
+
+    /**
+     * 8. If the image service identifies an image that does not contain a cat,
+     *    change the status to no alarm as long as the sensors are not active.
+     */
+    @Test
+    public void testActiveStatus_setToNoAlarm_whenImageServiceDoesntSeeACat_andSensorsAreNotActive() {
+        // Set all Sensors to be inactive
+        List<Sensor> sensors = getSensors();
+        sensors.forEach(s -> s.setActive(false));
+
+        // Mock securityRepository to return these sensors
+        when(securityRepository.getSensors()).thenReturn(new HashSet<>(sensors));
+
+        // Mock imageService to never see a cat
+        when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(false);
+
+        // Call securityService#processImage
+        securityService.processImage(null);
+
+        // Verify that alarm status was updated
+        verify(securityRepository).setAlarmStatus(AlarmStatus.NO_ALARM);
+    }
+
+    /**
+     * 8.1 Testing 8 but with an active sensor
+     */
+    @Test
+    public void testActiveStatus_remainsUnchanged_whenImageServiceDoesntDetectACat_andASensorIsActive() {
+        // Set all Sensors to be inactive
+        List<Sensor> sensors = getSensors();
+        sensors.get(0).setActive(true);
+
+        // Mock securityRepository to return these sensors
+        when(securityRepository.getSensors()).thenReturn(new HashSet<>(sensors));
+
+        // Mock imageService to never see a cat
+        when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(false);
+
+        // Call securityService#processImage
+        securityService.processImage(null);
+
+        // Verify that alarm status was never updated
+        verify(securityRepository, never()).setAlarmStatus(any(AlarmStatus.class));
     }
 }
