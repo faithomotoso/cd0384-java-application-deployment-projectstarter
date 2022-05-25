@@ -223,4 +223,16 @@ public class SecurityServiceTest {
         // Verify that alarm status was never updated
         verify(securityRepository, never()).setAlarmStatus(any(AlarmStatus.class));
     }
+
+    /**
+     * 9. If the system is disarmed, set the status to no alarm.
+     */
+    @Test
+    public void testAlarmStatus_setToNoAlarm_whenSystemIsDisarmed() {
+     securityService.setArmingStatus(ArmingStatus.DISARMED);
+
+     verify(securityRepository).setAlarmStatus(AlarmStatus.NO_ALARM);
+    }
+
+
 }

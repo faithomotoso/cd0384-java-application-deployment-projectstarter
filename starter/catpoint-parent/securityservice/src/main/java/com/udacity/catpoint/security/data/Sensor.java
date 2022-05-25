@@ -11,6 +11,8 @@ import java.util.UUID;
 public class Sensor implements Comparable<Sensor> {
     private UUID sensorId;
     private String name;
+
+    // Active means a sensor has been triggered - detected an object e.g a cat
     private Boolean active;
     private SensorType sensorType;
 
