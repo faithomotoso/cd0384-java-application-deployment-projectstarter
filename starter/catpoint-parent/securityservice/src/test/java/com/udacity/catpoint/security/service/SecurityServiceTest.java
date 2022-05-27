@@ -260,4 +260,22 @@ public class SecurityServiceTest {
         // Check that each sensor has been set to inactive
         sensors.forEach(s -> assertEquals(false, s.getActive()));
     }
+
+    /**
+     * 11. If the system is armed-home while the camera shows a cat, set the alarm status to alarm.
+     */
+    @Test
+    public void testAlarmStatus_whenSystemIsArmedHome_andCameraShowsACat() {
+        // Mock image service to always detect a cat
+        when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(Boolean.TRUE);
+
+        // Mock system to be armed home
+        when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
+
+        // Call process image - detects a cat
+        securityService.processImage(null);
+
+        // Verify method to change alarm status was called
+        verify(securityRepository).setAlarmStatus(AlarmStatus.ALARM);
+    }
 }
