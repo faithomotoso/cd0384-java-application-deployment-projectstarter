@@ -7,13 +7,12 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -175,18 +174,18 @@ public class SecurityServiceTest {
         verify(securityRepository, times(1)).setAlarmStatus(AlarmStatus.ALARM);
     }
 
-    private List<Sensor> getSensors() {
-        return activeSensorStream().map(a -> (Sensor) a.get()[0]).collect(Collectors.toList());
+    private Set<Sensor> getSensors() {
+        return activeSensorStream().map(a -> (Sensor) a.get()[0]).collect(Collectors.toUnmodifiableSet());
     }
 
     /**
      * 8. If the image service identifies an image that does not contain a cat,
-     *    change the status to no alarm as long as the sensors are not active.
+     * change the status to no alarm as long as the sensors are not active.
      */
     @Test
     public void testActiveStatus_setToNoAlarm_whenImageServiceDoesntSeeACat_andSensorsAreNotActive() {
         // Set all Sensors to be inactive
-        List<Sensor> sensors = getSensors();
+        Set<Sensor> sensors = getSensors();
         sensors.forEach(s -> s.setActive(false));
 
         // Mock securityRepository to return these sensors
@@ -208,8 +207,8 @@ public class SecurityServiceTest {
     @Test
     public void testActiveStatus_remainsUnchanged_whenImageServiceDoesntDetectACat_andASensorIsActive() {
         // Set all Sensors to be inactive
-        List<Sensor> sensors = getSensors();
-        sensors.get(0).setActive(true);
+        Set<Sensor> sensors = getSensors();
+        new ArrayList<>(sensors).get(0).setActive(true);
 
         // Mock securityRepository to return these sensors
         when(securityRepository.getSensors()).thenReturn(new HashSet<>(sensors));
@@ -229,10 +228,36 @@ public class SecurityServiceTest {
      */
     @Test
     public void testAlarmStatus_setToNoAlarm_whenSystemIsDisarmed() {
-     securityService.setArmingStatus(ArmingStatus.DISARMED);
+        securityService.setArmingStatus(ArmingStatus.DISARMED);
 
-     verify(securityRepository).setAlarmStatus(AlarmStatus.NO_ALARM);
+        verify(securityRepository).setAlarmStatus(AlarmStatus.NO_ALARM);
     }
 
 
+    /**
+     * 10. If the system is armed, reset all sensors to inactive.
+     */
+    @ParameterizedTest
+    @EnumSource(value = ArmingStatus.class, names = {"ARMED_HOME", "ARMED_AWAY"})
+    public void testSensorsStatus_setToInactive_whenSystemIsArmed(ArmingStatus armingStatus) {
+        Set<Sensor> sensors = getSensors();
+
+        // Make each sensor active
+        sensors.forEach(s -> s.setActive(true));
+
+        // Mock getSensors
+        when(securityRepository.getSensors()).thenReturn(sensors);
+
+        // Mock alarm status
+        when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.ALARM);
+
+        // Set system to be armed
+        securityService.setArmingStatus(armingStatus);
+
+        // Verify securityRepository was called to update the sensor
+        verify(securityRepository, atLeast(sensors.size())).updateSensor(any(Sensor.class));
+
+        // Check that each sensor has been set to inactive
+        sensors.forEach(s -> assertEquals(false, s.getActive()));
+    }
 }

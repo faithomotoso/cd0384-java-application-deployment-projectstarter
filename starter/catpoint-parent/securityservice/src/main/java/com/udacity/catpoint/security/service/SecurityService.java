@@ -9,6 +9,7 @@ import com.udacity.catpoint.security.data.Sensor;
 
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,6 +41,13 @@ public class SecurityService {
             setAlarmStatus(AlarmStatus.NO_ALARM);
         }
         securityRepository.setArmingStatus(armingStatus);
+
+        if (List.of(ArmingStatus.ARMED_HOME, ArmingStatus.ARMED_AWAY).contains(armingStatus)) {
+            // Reset sensors to inactive
+            getSensors().forEach(s -> {
+                changeSensorActivationStatus(s, false);
+            });
+        }
     }
 
     /**
