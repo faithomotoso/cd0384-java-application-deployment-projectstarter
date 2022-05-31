@@ -1,7 +1,9 @@
 package com.udacity.catpoint.security.data;
 
 import com.google.common.collect.ComparisonChain;
+import com.google.gson.*;
 
+import java.lang.reflect.Type;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -80,5 +82,25 @@ public class Sensor implements Comparable<Sensor> {
                 .compare(this.sensorType.toString(), o.sensorType.toString())
                 .compare(this.sensorId, o.sensorId)
                 .result();
+    }
+
+    public static class SensorDeserializer implements JsonDeserializer<Sensor> {
+
+        @Override
+        public Sensor deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+            String sensorId = jsonObject.remove("sensorId").getAsString();
+            UUID uuid = UUID.fromString(sensorId);
+
+            Sensor sensor = new Sensor(
+                    jsonObject.get("name").getAsJsonPrimitive().getAsString(),
+                    SensorType.valueOf(jsonObject.get("sensorType").getAsJsonPrimitive().getAsString()),
+                    jsonObject.get("active").getAsJsonPrimitive().getAsBoolean());
+
+            sensor.setSensorId(uuid);
+
+            return sensor;
+        }
     }
 }
