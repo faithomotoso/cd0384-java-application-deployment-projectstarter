@@ -63,9 +63,11 @@ public class PretendDatabaseSecurityRepositoryImpl implements SecurityRepository
 
     @Override
     public void updateSensor(Sensor sensor) {
-        sensors.remove(sensor);
-        sensors.add(sensor);
-        prefs.put(SENSORS, gson.toJson(sensors));
+        synchronized (this) {
+            sensors.remove(sensor);
+            sensors.add(sensor);
+            prefs.put(SENSORS, gson.toJson(sensors));
+        }
     }
 
     @Override

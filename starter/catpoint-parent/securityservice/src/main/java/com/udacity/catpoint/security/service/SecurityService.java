@@ -44,10 +44,9 @@ public class SecurityService {
 
         if (List.of(ArmingStatus.ARMED_HOME, ArmingStatus.ARMED_AWAY).contains(armingStatus)) {
             // Reset sensors to inactive
-            getSensors().forEach(s -> {
-                changeSensorActivationStatus(s, false);
-            });
+            getSensors().parallelStream().forEach(s -> changeSensorActivationStatus(s, false));
         }
+        statusListeners.forEach(StatusListener::sensorStatusChanged);
     }
 
     /**
