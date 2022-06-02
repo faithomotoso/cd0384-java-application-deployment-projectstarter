@@ -7,6 +7,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
@@ -42,28 +43,31 @@ public class SecurityServiceTest {
      */
     @ParameterizedTest
     @DisplayName("If alarm is armed and sensor becomes activated, put system into pending alarm status")
-    @MethodSource(value = "activeSensorStream")
-    public void testAlarmStatus_withArmedAlarm_andActivatedSensor(Sensor sensor) {
+    @EnumSource(value = ArmingStatus.class, names = {"ARMED_HOME", "ARMED_AWAY"})
+    public void testAlarmStatus_withArmedAlarm_andActivatedSensor(ArmingStatus armingStatus) {
         // Mock arming status to be armed
-        when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
+        when(securityRepository.getArmingStatus()).thenReturn(armingStatus);
 
         // Set mock in repository for getAlarmStatus
         when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.NO_ALARM);
 
+        Sensor sensor = generateSensors().get(0);
         securityService.changeSensorActivationStatus(sensor, true);
 
         // Verify that system was updated through the repository
         verify(securityRepository).setAlarmStatus(AlarmStatus.PENDING_ALARM);
     }
 
-    private static Stream<Arguments> activeSensorStream() {
-        List<Sensor> sensors = List.of(
+    private static List<Sensor> generateSensors() {
+        return List.of(
                 new Sensor("Fire Sensor", SensorType.DOOR, true),
                 new Sensor("Water Sensor", SensorType.MOTION),
                 new Sensor("Light Sensor", SensorType.WINDOW)
         );
+    }
 
-        return sensors.stream().map(Arguments::of);
+    private static Stream<Arguments> activeSensorStream() {
+        return generateSensors().stream().map(Arguments::of);
     }
 
     /**
@@ -71,14 +75,15 @@ public class SecurityServiceTest {
      * set the alarm status to alarm.
      */
     @ParameterizedTest
-    @MethodSource(value = "activeSensorStream")
-    public void testAlarmStatus_whenAlarmIsArmed_withSystemInPendingAlarm_andSensorBecomesActivated(Sensor sensor) {
+    @EnumSource(value = ArmingStatus.class, names = {"ARMED_HOME", "ARMED_AWAY"})
+    public void testAlarmStatus_whenAlarmIsArmed_withSystemInPendingAlarm_andSensorBecomesActivated(ArmingStatus armingStatus) {
         // Mock security repository and set arming status
-        when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
+        when(securityRepository.getArmingStatus()).thenReturn(armingStatus);
 
         // Mock alarm status to pending alarm
         when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.PENDING_ALARM);
 
+        Sensor sensor = generateSensors().get(0);
         securityService.changeSensorActivationStatus(sensor, true);
 
         verify(securityRepository).setAlarmStatus(AlarmStatus.ALARM);
@@ -87,20 +92,23 @@ public class SecurityServiceTest {
     /**
      * 3. If pending alarm and all sensors are inactive, return to no alarm state.
      */
-    @ParameterizedTest
-    @MethodSource(value = "activeSensorStream")
-    public void testAlarmStatus_whenSystemInPendingAlarm_andSensorBecomesInactive(Sensor sensor) {
-        // Set sensor to active
-        sensor.setActive(true);
+    @Test
+    public void testAlarmStatus_whenSystemInPendingAlarm_andSensorBecomesInactive() {
 
         // Mock alarm status to PendingAlarm
         when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.PENDING_ALARM);
 
-        // Deactivate sensor
-        securityService.changeSensorActivationStatus(sensor, false);
+        // Set all sensors to active
+        List<Sensor> activeSensors = generateSensors().stream().peek(s -> s.setActive(true)).collect(Collectors.toList());
+
+        // Mock sensors list
+        when(securityRepository.getSensors()).thenReturn(new HashSet<>(activeSensors));
+
+        // Deactivate all sensors
+        securityService.getSensors().forEach(s -> securityService.changeSensorActivationStatus(s, false));
 
         // Verify system change
-        verify(securityRepository).setAlarmStatus(AlarmStatus.NO_ALARM);
+        verify(securityRepository, atLeastOnce()).setAlarmStatus(AlarmStatus.NO_ALARM);
     }
 
     /**
@@ -143,11 +151,10 @@ public class SecurityServiceTest {
      * 6. If a sensor is deactivated while already inactive, make no changes to the alarm state.
      */
     @ParameterizedTest
-    @MethodSource(value = "activeSensorStream")
-    public void testAlarmState_remainsUnchanged_whenADeactivatedSensor_getsDeactivated(Sensor sensor) {
+    @EnumSource(value = AlarmStatus.class)
+    public void testAlarmState_remainsUnchanged_whenADeactivatedSensor_getsDeactivated(AlarmStatus alarmStatus) {
 
-        AlarmStatus alarmStatus = new Random().nextBoolean() ? AlarmStatus.PENDING_ALARM : AlarmStatus.ALARM;
-
+        Sensor sensor = generateSensors().get(0);
         // Set sensor to be deactivated
         sensor.setActive(false);
 

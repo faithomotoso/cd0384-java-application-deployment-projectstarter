@@ -11,6 +11,7 @@ import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -147,7 +148,8 @@ public class SecurityService {
     }
 
     public Set<Sensor> getSensors() {
-        return securityRepository.getSensors();
+        // Fixes the ConcurrentModificationException
+        return new TreeSet<>(securityRepository.getSensors());
     }
 
     public void addSensor(Sensor sensor) {
