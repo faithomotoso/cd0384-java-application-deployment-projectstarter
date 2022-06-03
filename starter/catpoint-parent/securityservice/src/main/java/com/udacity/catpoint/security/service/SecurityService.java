@@ -45,7 +45,9 @@ public class SecurityService {
 
         if (List.of(ArmingStatus.ARMED_HOME, ArmingStatus.ARMED_AWAY).contains(armingStatus)) {
             // Reset sensors to inactive
-            getSensors().parallelStream().forEach(s -> changeSensorActivationStatus(s, false));
+            for (Sensor sensor : getSensors()) {
+                changeSensorActivationStatus(sensor, false);
+            }
         }
         statusListeners.forEach(StatusListener::sensorStatusChanged);
     }
@@ -115,7 +117,7 @@ public class SecurityService {
     private void handleSensorDeactivated() {
         switch(securityRepository.getAlarmStatus()) {
             case PENDING_ALARM -> setAlarmStatus(AlarmStatus.NO_ALARM);
-            case ALARM -> setAlarmStatus(AlarmStatus.PENDING_ALARM);
+//            case ALARM -> setAlarmStatus(AlarmStatus.PENDING_ALARM);
         }
     }
 
