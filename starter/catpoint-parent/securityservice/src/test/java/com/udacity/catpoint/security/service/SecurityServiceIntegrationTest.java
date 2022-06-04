@@ -44,7 +44,7 @@ public class SecurityServiceIntegrationTest {
      */
     @ParameterizedTest
     @EnumSource(value = ArmingStatus.class, names = {"ARMED_HOME", "ARMED_AWAY"})
-    public void testAlarmStatus_withArmedAlarm_andActivatedSensor(ArmingStatus armingStatus) {
+    public void pendingAlarmStatus_withArmedAlarm_andActivatedSensor(ArmingStatus armingStatus) {
         // Arm the alarm
         securityService.setArmingStatus(armingStatus);
 
@@ -65,7 +65,7 @@ public class SecurityServiceIntegrationTest {
      */
     @ParameterizedTest
     @EnumSource(value = ArmingStatus.class, names = {"ARMED_HOME", "ARMED_AWAY"})
-    public void testAlarmStatus_whenAlarmIsArmed_withSystemInPendingAlarm_andSensorBecomesActivated(ArmingStatus armingStatus) {
+    public void alarmStatus_whenAlarmIsArmed_withSystemInPendingAlarm_andSensorBecomesActivated(ArmingStatus armingStatus) {
         // Set status to be armed
         securityService.setArmingStatus(armingStatus);
 
@@ -84,7 +84,7 @@ public class SecurityServiceIntegrationTest {
      * 3. If pending alarm and all sensors are inactive, return to no alarm state.
      */
     @Test
-    public void testAlarmStatus_whenSystemInPendingAlarm_andSensorBecomesInactive() {
+    public void noAlarmStatus_whenSystemInPendingAlarm_andSensorBecomesInactive() {
         // Set system to pending alarm
         securityService.setAlarmStatus(AlarmStatus.PENDING_ALARM);
 
@@ -100,7 +100,7 @@ public class SecurityServiceIntegrationTest {
      */
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    public void testAlarmState_whenAlarmIsActive_andSensorStateChanges(boolean sensorState) {
+    public void alarmState_whenAlarmIsActive_andSensorStateChanges(boolean sensorState) {
         // Set system to be active
         securityService.setAlarmStatus(AlarmStatus.ALARM);
 
@@ -115,7 +115,7 @@ public class SecurityServiceIntegrationTest {
      * 5. If a sensor is activated while already active and the system is in pending state, change it to alarm state.
      */
     @Test
-    public void testAlarmState_whenSensorIsActive_andSensorGetsActivated_andSystemIsInPendingState() {
+    public void alarmState_whenSensorIsActive_andSensorGetsActivated_andSystemIsInPendingState() {
         securityService.setArmingStatus(ArmingStatus.ARMED_AWAY);
 
         // Set system to be in pending state
@@ -138,7 +138,7 @@ public class SecurityServiceIntegrationTest {
      */
     @ParameterizedTest
     @EnumSource(value = AlarmStatus.class)
-    public void testAlarmState_remainsUnchanged_whenADeactivatedSensor_getsDeactivated(AlarmStatus alarmStatus) {
+    public void alarmState_remainsUnchanged_whenADeactivatedSensor_getsDeactivated(AlarmStatus alarmStatus) {
         // Make all sensors to be inactive
         securityService.getSensors().forEach(s -> s.setActive(false));
 
@@ -156,7 +156,7 @@ public class SecurityServiceIntegrationTest {
      * 7. If the image service identifies an image containing a cat while the system is armed-home, put the system into alarm status.
      */
     @Test
-    public void testAlarmStatus_isSetToAlarm_whenImageServiceDetectsCat_andArmingStatusIsArmedHome() {
+    public void alarmStatus_isSetToAlarm_whenImageServiceDetectsCat_andArmingStatusIsArmedHome() {
         // Mock image service
         when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(true);
 
@@ -175,7 +175,7 @@ public class SecurityServiceIntegrationTest {
      */
     @ParameterizedTest
     @EnumSource(value = AlarmStatus.class)
-    public void testActiveStatus_setToNoAlarm_whenImageServiceDoesntSeeACat_andSensorsAreNotActive(AlarmStatus alarmStatus) {
+    public void activeStatus_setToNoAlarm_whenImageServiceDoesntSeeACat_andSensorsAreNotActive(AlarmStatus alarmStatus) {
         // Set alarm status
         securityService.setAlarmStatus(alarmStatus);
 
@@ -197,7 +197,7 @@ public class SecurityServiceIntegrationTest {
      */
     @ParameterizedTest
     @EnumSource(value = AlarmStatus.class)
-    public void testAlarmStatus_setToNoAlarm_whenSystemIsDisarmed(AlarmStatus alarmStatus) {
+    public void alarmStatus_setToNoAlarm_whenSystemIsDisarmed(AlarmStatus alarmStatus) {
         // Set alarm status
         securityService.setAlarmStatus(alarmStatus);
 
@@ -213,7 +213,7 @@ public class SecurityServiceIntegrationTest {
      */
     @ParameterizedTest
     @EnumSource(value = ArmingStatus.class, names = {"ARMED_HOME", "ARMED_AWAY"})
-    public void testSensorsStatus_setToInactive_whenSystemIsArmed(ArmingStatus armingStatus) {
+    public void sensorsStatus_setToInactive_whenSystemIsArmed(ArmingStatus armingStatus) {
         // Set all sensors as active
         securityService.getSensors().forEach(s -> s.setActive(true));
 
@@ -228,7 +228,7 @@ public class SecurityServiceIntegrationTest {
      * 11. If the system is armed-home while the camera shows a cat, set the alarm status to alarm.
      */
     @Test
-    public void testAlarmStatus_whenSystemIsArmedHome_andCameraShowsACat() {
+    public void alarmStatus_whenSystemIsArmedHome_andCameraShowsACat() {
         // Mock image service
         when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(true);
 

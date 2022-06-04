@@ -10,5 +10,4 @@ module com.udacity.catpoint.securityservice {
     exports com.udacity.catpoint.security.data;
 
     opens com.udacity.catpoint.security.data to gson;
-    opens com.udacity.catpoint.security.service;
 }
