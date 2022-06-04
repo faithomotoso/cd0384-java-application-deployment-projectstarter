@@ -27,6 +27,8 @@ public class SecurityService {
     private SecurityRepository securityRepository;
     private Set<StatusListener> statusListeners = new HashSet<>();
 
+    private boolean catDetectedStatus;
+
     public SecurityService(SecurityRepository securityRepository, ImageService imageService) {
         this.securityRepository = securityRepository;
         this.imageService = imageService;
@@ -41,7 +43,15 @@ public class SecurityService {
         if(armingStatus == ArmingStatus.DISARMED) {
             setAlarmStatus(AlarmStatus.NO_ALARM);
         }
+
+        ArmingStatus oldArmingStatus = securityRepository.getArmingStatus();
+
         securityRepository.setArmingStatus(armingStatus);
+
+        // Check if a cat has been detected when arming status was DISARMED
+        if (oldArmingStatus == ArmingStatus.DISARMED) {
+            catDetected(catDetectedStatus);
+        }
 
         if (List.of(ArmingStatus.ARMED_HOME, ArmingStatus.ARMED_AWAY).contains(armingStatus)) {
             // Reset sensors to inactive
@@ -58,6 +68,7 @@ public class SecurityService {
      * @param cat True if a cat is detected, otherwise false.
      */
     private void catDetected(Boolean cat) {
+        this.catDetectedStatus = cat;
         if(cat && getArmingStatus() == ArmingStatus.ARMED_HOME) {
             setAlarmStatus(AlarmStatus.ALARM);
         } else {
