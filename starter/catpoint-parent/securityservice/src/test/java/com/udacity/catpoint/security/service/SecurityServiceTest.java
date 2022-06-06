@@ -287,32 +287,32 @@ public class SecurityServiceTest {
     /**
      * 11. If the system is armed-home while the camera shows a cat, set the alarm status to alarm.
      */
-    @ParameterizedTest
-    @EnumSource(value = AlarmStatus.class, names = {"NO_ALARM", "ALARM"})
-    public void fix_alarmStatus_whenSystemIsArmedHome_andCameraShowsACat(AlarmStatus alarmStatus) {
-        // Mock sensor list
-        when(securityRepository.getSensors()).thenReturn(new HashSet<>(generateSensors()));
+//     @ParameterizedTest
+//     @EnumSource(value = AlarmStatus.class, names = {"NO_ALARM", "ALARM"})
+//     public void fix_alarmStatus_whenSystemIsArmedHome_andCameraShowsACat(AlarmStatus alarmStatus) {
+//         // Mock sensor list
+//         when(securityRepository.getSensors()).thenReturn(new HashSet<>(generateSensors()));
 
-        // Mock image service to always detect a cat
-        when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(Boolean.TRUE);
+//         // Mock image service to always detect a cat
+//         when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(Boolean.TRUE);
 
-        // Mock the system to be disarmed
-        when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.DISARMED);
+//         // Mock the system to be disarmed
+//         when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.DISARMED);
 
-        // Set initial alarm status
-        when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.NO_ALARM);
+//         // Set initial alarm status
+//         when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.NO_ALARM);
 
-        // Call process image - detects a cat
-//        securityService.processImage(null);
-        securityService.catDetectedStatus = true;
+//         // Call process image - detects a cat
+// //        securityService.processImage(null);
+//         securityService.catDetectedStatus = true;
 
-        // Mock system to be armed home
-        securityService.setOldArmingStatus(ArmingStatus.DISARMED);
-//        when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
+//         // Mock system to be armed home
+//         securityService.setOldArmingStatus(ArmingStatus.DISARMED);
+// //        when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
 
-        securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
+//         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
 
-        // Verify method to change alarm status was called
-        verify(securityRepository, atLeastOnce()).setAlarmStatus(AlarmStatus.ALARM);
-    }
+//         // Verify method to change alarm status was called
+//         verify(securityRepository, atLeastOnce()).setAlarmStatus(AlarmStatus.ALARM);
+//     }
 }
