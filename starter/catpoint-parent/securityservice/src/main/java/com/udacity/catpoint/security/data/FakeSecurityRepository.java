@@ -68,4 +68,9 @@ public class FakeSecurityRepository implements SecurityRepository {
     public ArmingStatus getArmingStatus() {
         return this.armingStatus;
     }
+
+    @Override
+    public ArmingStatus getOldArmingStatus() {
+        return this.armingStatus;
+    }
 }

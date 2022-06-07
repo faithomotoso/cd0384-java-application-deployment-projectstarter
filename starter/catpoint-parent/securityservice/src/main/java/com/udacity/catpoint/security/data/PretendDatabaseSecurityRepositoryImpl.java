@@ -94,4 +94,9 @@ public class PretendDatabaseSecurityRepositoryImpl implements SecurityRepository
     public ArmingStatus getArmingStatus() {
         return armingStatus;
     }
+
+    @Override
+    public ArmingStatus getOldArmingStatus() {
+        return this.armingStatus;
+    }
 }
